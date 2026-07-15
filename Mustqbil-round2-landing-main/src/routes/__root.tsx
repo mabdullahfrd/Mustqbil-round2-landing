@@ -102,6 +102,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      {
+        rel: "stylesheet",
+        href: "https://db.onlinewebfonts.com/c/5ac3fe7c6abd2f62067f266d89671492?family=HelveticaNowDisplay-Medium",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://db.onlinewebfonts.com/c/1aa3377e489837a26d019bba501e779d?family=HelveticaNowDisplayW01-Rg",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -114,9 +122,17 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <link
+          rel="stylesheet"
+          href="https://db.onlinewebfonts.com/c/5ac3fe7c6abd2f62067f266d89671492?family=HelveticaNowDisplay-Medium"
+        />
+        <link
+          rel="stylesheet"
+          href="https://db.onlinewebfonts.com/c/1aa3377e489837a26d019bba501e779d?family=HelveticaNowDisplayW01-Rg"
+        />
         <HeadContent />
       </head>
-      <body>
+      <body className="font-body antialiased">
         {children}
         <Scripts />
       </body>

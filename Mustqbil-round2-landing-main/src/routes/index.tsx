@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Sparkles,
   Star,
+  Copy,
 } from "lucide-react";
 import { useState, useEffect, useRef, type ReactNode } from "react";
 
@@ -99,74 +100,134 @@ function AnimateOnScroll({
   );
 }
 
+function useTypewriter(text: string, speed = 38, startDelay = 600) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    let i = 0;
+    const timer = setTimeout(() => {
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          setDisplayed(text.slice(0, i + 1));
+          i++;
+        } else {
+          setDone(true);
+          clearInterval(interval);
+        }
+      }, speed);
+      return () => clearInterval(interval);
+    }, startDelay);
+    return () => clearTimeout(timer);
+  }, [text, speed, startDelay]);
+
+  return { displayed, done };
+}
+
 function Index() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hamburgerOpen, setHamburgerOpen] = useState(false);
+
+  const typewriterText =
+    "Glad you stopped by. Good teams tend to find us. Now, what are we building?";
+  const { displayed, done } = useTypewriter(typewriterText);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <a href="/" className="flex items-center gap-2.5 font-semibold text-foreground">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Layout className="h-4 w-4" />
-            </div>
-            Clarity
+    <div className="flex min-h-screen flex-col bg-background relative">
+      {/* Background Video */}
+      <video
+        className="video-bg"
+        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260530_042513_df96a13b-6155-4f6e-8b93-c9dee66fba08.mp4"
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      />
+
+      <header className="fixed top-0 left-0 right-0 z-10 px-5 sm:px-8 py-4 sm:py-5 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <a href="/" className="flex items-center gap-3 font-heading font-semibold text-foreground" style={{ fontSize: "21px" }}>
+            <span className="text-[21px] sm:text-[26px] tracking-tight">Clarity</span>
+            <span className="text-[25px] sm:text-[30px] select-none" style={{ letterSpacing: "-0.02em" }}>
+              ✳︎
+            </span>
           </a>
 
-          <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
-            <a href="#features" className="transition-colors hover:text-foreground">
+          <nav className="hidden md:flex items-center gap-8 text-[23px] text-foreground">
+            <a href="#features" className="hover:opacity-60 transition-opacity">
               Features
             </a>
-            <a href="#how-it-works" className="transition-colors hover:text-foreground">
+            <a href="#how-it-works" className="hover:opacity-60 transition-opacity">
               How it works
             </a>
-            <a href="#pricing" className="transition-colors hover:text-foreground">
+            <a href="#pricing" className="hover:opacity-60 transition-opacity">
               Pricing
             </a>
-            <a href="#faq" className="transition-colors hover:text-foreground">
+            <a href="#faq" className="hover:opacity-60 transition-opacity">
               FAQ
             </a>
           </nav>
 
-          <div className="hidden items-center gap-3 md:flex">
-            <Button variant="ghost" size="sm">
+          <div className="hidden md:flex items-center gap-6">
+            <a href="#" className="text-[23px] underline underline-offset-2 hover:opacity-60 transition-opacity text-foreground">
               Log in
-            </Button>
-            <Button size="sm">
+            </a>
+            <a
+              href="#"
+              className="text-[23px] underline underline-offset-2 hover:opacity-60 transition-opacity text-foreground"
+            >
               Start free trial
-              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-            </Button>
+              <ArrowRight className="ml-1.5 h-5 w-5 inline" />
+            </a>
           </div>
 
           <button
-            className="rounded-md p-2 transition-colors hover:bg-muted md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden flex flex-col gap-[5px] p-2"
+            onClick={() => {
+              setMobileMenuOpen(!mobileMenuOpen);
+              setHamburgerOpen(!hamburgerOpen);
+            }}
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <span
+              className="w-6 h-[2px] bg-black transition-all duration-300 origin-center"
+              style={{
+                transform: hamburgerOpen ? "rotate(45deg) translate(7px, 7px)" : "none",
+              }}
+            />
+            <span
+              className="w-6 h-[2px] bg-black transition-opacity duration-300"
+              style={{ opacity: hamburgerOpen ? 0 : 1 }}
+            />
+            <span
+              className="w-6 h-[2px] bg-black transition-all duration-300 origin-center"
+              style={{
+                transform: hamburgerOpen ? "rotate(-45deg) translate(7px, -7px)" : "none",
+              }}
+            />
           </button>
         </div>
 
         {mobileMenuOpen && (
-          <div className="border-t border-border px-4 py-4 md:hidden">
-            <nav className="flex flex-col gap-3 text-sm font-medium text-muted-foreground">
-              <a href="#features" onClick={() => setMobileMenuOpen(false)}>
+          <div className="md:hidden fixed inset-0 z-9 bg-white/95 backdrop-blur-sm flex flex-col items-start justify-center px-8 gap-8 pt-20">
+            <nav className="flex flex-col gap-4 text-left">
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-[32px] font-medium text-foreground hover:opacity-60 transition-opacity">
                 Features
               </a>
-              <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="text-[32px] font-medium text-foreground hover:opacity-60 transition-opacity">
                 How it works
               </a>
-              <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-[32px] font-medium text-foreground hover:opacity-60 transition-opacity">
                 Pricing
               </a>
-              <a href="#faq" onClick={() => setMobileMenuOpen(false)}>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="text-[32px] font-medium text-foreground hover:opacity-60 transition-opacity">
                 FAQ
               </a>
-              <hr className="border-border" />
-              <a href="#" className="text-foreground">
+              <hr className="w-full border-border" />
+              <a href="#" className="text-[32px] font-medium text-foreground hover:opacity-60 transition-opacity">
                 Log in
               </a>
-              <a href="#" className="text-foreground">
+              <a href="#" className="text-[32px] font-medium text-foreground underline underline-offset-2 hover:opacity-60 transition-opacity">
                 Start free trial
               </a>
             </nav>
@@ -174,148 +235,61 @@ function Index() {
         )}
       </header>
 
-      <main className="flex-1">
-        {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02]" />
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-primary/[0.03] blur-3xl" />
-
-          <div className="relative mx-auto max-w-6xl px-4 py-24 sm:px-6 sm:py-32 lg:px-8 lg:py-36">
-            <div className="mx-auto max-w-3xl text-center">
-              <div className="animate-fade-in mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-background px-4 py-1.5 text-sm text-muted-foreground">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Trusted by hundreds of growing teams
-              </div>
-
-              <h1 className="animate-fade-in-up text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Project management <span className="gradient-text">without the noise</span>
-              </h1>
-
-              <p className="animate-fade-in-up-delay-1 mt-6 text-lg leading-8 text-muted-foreground sm:text-xl">
-                Clarity gives small teams a clean, focused workspace to plan tasks, track progress,
-                and ship work together. No bloat, no steep learning curve.
-              </p>
-
-              <div className="animate-fade-in-up-delay-2 mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <div className="flex w-full max-w-md items-center gap-2 sm:w-auto">
-                  <Input
-                    type="email"
-                    placeholder="Enter your work email"
-                    className="h-12 flex-1 sm:w-64"
-                    aria-label="Work email"
-                  />
-                  <Button size="lg" className="h-12 shrink-0 px-6">
-                    Get started
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-              <p className="animate-fade-in-up-delay-3 mt-4 text-sm text-muted-foreground">
-                Free 14-day trial. No credit card required.
-              </p>
+      <main className="flex-1 relative z-10">
+        {/* Hero Section */}
+        <section className="min-h-screen flex flex-col md:justify-center md:pb-0 justify-end pb-12 px-5 sm:px-8 md:px-10 overflow-hidden">
+          <div className="max-w-xl relative z-10 w-full">
+            <div className="animate-fade-in pointer-events-none select-none mb-5 sm:mb-6" style={{ fontSize: "clamp(18px, 4vw, 26px)", lineHeight: 1.3, fontWeight: 400, color: "#000", filter: "blur(4px)" }}>
+              <span className="block">Hey there, meet Clarity,</span>
+              <span className="block">Simple project management for focused teams</span>
             </div>
 
-            {/* Product Preview */}
-            <AnimateOnScroll className="animate-fade-in-up-delay-4 mx-auto mt-16 max-w-4xl lg:mt-20">
-              <div className="overflow-hidden rounded-xl border border-border bg-card shadow-2xl shadow-primary/[0.06]">
-                <div className="flex items-center gap-2 border-b border-border bg-muted/50 px-4 py-3">
-                  <div className="h-3 w-3 rounded-full bg-muted-foreground/20" />
-                  <div className="h-3 w-3 rounded-full bg-muted-foreground/20" />
-                  <div className="h-3 w-3 rounded-full bg-muted-foreground/20" />
-                  <span className="ml-3 text-xs text-muted-foreground">Clarity Workspace</span>
-                </div>
-                <div className="grid grid-cols-5 gap-px bg-border">
-                  <div className="col-span-1 hidden bg-card p-4 sm:block">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 rounded-md bg-primary/10 px-2.5 py-1.5 text-xs font-medium text-primary">
-                        <Layout className="h-3 w-3" /> Board
-                      </div>
-                      <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground">
-                        <BarChart3 className="h-3 w-3" /> Progress
-                      </div>
-                      <div className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-muted-foreground">
-                        <Users className="h-3 w-3" /> Team
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-span-4 bg-card p-4 sm:p-6">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h4 className="text-sm font-semibold text-foreground">Sprint Board</h4>
-                      <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                        8 tasks
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">To do</p>
-                        <div className="space-y-2">
-                          <div className="rounded-lg border border-border bg-background p-2.5">
-                            <p className="text-xs font-medium text-foreground">
-                              Update landing page
-                            </p>
-                            <div className="mt-1.5 flex items-center gap-1">
-                              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                              <span className="text-[10px] text-muted-foreground">High</span>
-                            </div>
-                          </div>
-                          <div className="rounded-lg border border-border bg-background p-2.5">
-                            <p className="text-xs font-medium text-foreground">Write blog post</p>
-                            <div className="mt-1.5 flex items-center gap-1">
-                              <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
-                              <span className="text-[10px] text-muted-foreground">Low</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">In progress</p>
-                        <div className="space-y-2">
-                          <div className="rounded-lg border border-primary/20 bg-primary/[0.03] p-2.5">
-                            <p className="text-xs font-medium text-foreground">API integration</p>
-                            <div className="mt-1.5 flex items-center gap-1">
-                              <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                              <span className="text-[10px] text-muted-foreground">Medium</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-xs font-medium text-muted-foreground">Done</p>
-                        <div className="space-y-2">
-                          <div className="rounded-lg border border-border bg-background p-2.5 opacity-70">
-                            <p className="text-xs font-medium text-foreground line-through">
-                              Design system
-                            </p>
-                            <div className="mt-1.5 flex items-center gap-1">
-                              <Check className="h-3 w-3 text-emerald-500" />
-                              <span className="text-[10px] text-muted-foreground">Complete</span>
-                            </div>
-                          </div>
-                          <div className="rounded-lg border border-border bg-background p-2.5 opacity-70">
-                            <p className="text-xs font-medium text-foreground line-through">
-                              Setup CI/CD
-                            </p>
-                            <div className="mt-1.5 flex items-center gap-1">
-                              <Check className="h-3 w-3 text-emerald-500" />
-                              <span className="text-[10px] text-muted-foreground">Complete</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </AnimateOnScroll>
+            <p className="animate-fade-in-up mb-5 sm:mb-6 min-h-[54px]" style={{ fontSize: "clamp(18px, 4vw, 26px)", lineHeight: 1.35, fontWeight: 400, color: "#000" }}>
+              {displayed}
+              {!done && (
+                <span className="inline-block w-[2px] h-[1.1em] bg-black align-middle ml-[2px] animate-blink" aria-hidden="true" />
+              )}
+            </p>
+
+            <div
+              className="flex flex-wrap gap-y-1"
+              style={{
+                opacity: done ? 1 : 0,
+                transform: done ? "translateY(0)" : "translateY(8px)",
+                transition: "opacity 0.4s ease, transform 0.4s ease",
+                transitionDelay: "400ms",
+              }}
+            >
+              <Button className="inline-flex items-center justify-center bg-white text-black border border-black/10 rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.3em] mx-[0.2em] mb-[0.4em] whitespace-nowrap hover:bg-black hover:text-white transition-colors duration-200">
+                Pitch us an idea
+              </Button>
+              <Button className="inline-flex items-center justify-center bg-white text-black border border-black/10 rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.3em] mx-[0.2em] mb-[0.4em] whitespace-nowrap hover:bg-black hover:text-white transition-colors duration-200">
+                Come work here
+              </Button>
+              <Button className="inline-flex items-center justify-center bg-white text-black border border-black/10 rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.3em] mx-[0.2em] mb-[0.4em] whitespace-nowrap hover:bg-black hover:text-white transition-colors duration-200">
+                Send a brief hello
+              </Button>
+              <Button className="inline-flex items-center justify-center bg-white text-black border border-black/10 rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.3em] mx-[0.2em] mb-[0.4em] whitespace-nowrap hover:bg-black hover:text-white transition-colors duration-200">
+                See how we operate
+              </Button>
+              <Button
+                variant="outline"
+                className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-transparent text-white border-white rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.3em] mx-[0.2em] mb-[0.4em] whitespace-nowrap hover:bg-white hover:text-black transition-colors duration-200"
+                onClick={() => navigator.clipboard.writeText("hello@clarity.inc")}
+              >
+                <span className="underline underline-offset-1">Reach us: hello@clarity.inc</span>
+                <Copy className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              </Button>
+            </div>
           </div>
         </section>
 
         {/* Features */}
-        <section id="features" className="border-t border-border">
+        <section id="features" className="border-t border-border bg-white">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
             <AnimateOnScroll>
               <div className="mb-14 max-w-2xl">
-                <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+                <h2 className="font-heading font-semibold tracking-tight text-foreground sm:text-4xl text-3xl">
                   Everything you need, nothing more
                 </h2>
                 <p className="mt-4 text-lg text-muted-foreground">
@@ -375,11 +349,11 @@ function Index() {
         <section id="how-it-works" className="border-t border-border bg-muted/30">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
             <AnimateOnScroll>
-              <div className="mb-14 text-center">
-                <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              <div className="mb-14">
+                <h2 className="font-heading font-semibold tracking-tight text-foreground sm:text-4xl text-3xl">
                   Get your team up and running in minutes
                 </h2>
-                <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
+                <p className="mt-4 text-lg text-muted-foreground max-w-xl">
                   Three simple steps from sign-up to your first shipped task.
                 </p>
               </div>
@@ -412,10 +386,10 @@ function Index() {
         </section>
 
         {/* Testimonial */}
-        <section className="border-y border-border">
-          <div className="mx-auto max-w-4xl px-4 py-20 text-center sm:px-6 sm:py-24 lg:px-8">
+        <section className="border-y border-border bg-white">
+          <div className="mx-auto max-w-4xl px-4 py-20 text-left sm:px-6 sm:py-24 lg:px-8">
             <AnimateOnScroll>
-              <div className="mb-6 flex justify-center gap-1">
+              <div className="mb-6 flex gap-1">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="h-5 w-5 fill-primary text-primary" />
                 ))}
@@ -424,11 +398,11 @@ function Index() {
                 &ldquo;We tried three other tools before Clarity. It is the first one our team
                 actually wanted to keep using.&rdquo;
               </blockquote>
-              <div className="mt-8 flex items-center justify-center gap-4">
+              <div className="mt-8 flex items-center gap-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
                   SC
                 </div>
-                <div className="text-left">
+                <div>
                   <p className="font-semibold text-foreground">Sarah Chen</p>
                   <p className="text-sm text-muted-foreground">Product Lead, Northwind Studios</p>
                 </div>
@@ -438,11 +412,11 @@ function Index() {
         </section>
 
         {/* Pricing */}
-        <section id="pricing" className="border-b border-border">
+        <section id="pricing" className="border-b border-border bg-white">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
             <AnimateOnScroll>
-              <div className="mb-14 text-center">
-                <h2 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              <div className="mb-14">
+                <h2 className="font-heading font-semibold tracking-tight text-foreground sm:text-4xl text-3xl">
                   Straightforward pricing
                 </h2>
                 <p className="mt-4 text-lg text-muted-foreground">
@@ -499,10 +473,10 @@ function Index() {
         </section>
 
         {/* FAQ */}
-        <section id="faq">
+        <section id="faq" className="bg-muted/30">
           <div className="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
             <AnimateOnScroll>
-              <h2 className="mb-10 text-center text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              <h2 className="mb-10 font-heading font-semibold tracking-tight text-foreground sm:text-4xl text-3xl">
                 Frequently asked questions
               </h2>
             </AnimateOnScroll>
@@ -510,29 +484,29 @@ function Index() {
               <AccordionItem value="trial">
                 <AccordionTrigger>Is there a free trial?</AccordionTrigger>
                 <AccordionContent>
-                  Yes. Every paid plan starts with a 14-day free trial. You can also use the Starter
-                  plan for free indefinitely.
+                  Yes. Every paid plan starts with a 14-day free trial. You can also use the
+                  Starter plan for free indefinitely.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="change-plan">
                 <AccordionTrigger>Can I change plans later?</AccordionTrigger>
                 <AccordionContent>
-                  Absolutely. You can upgrade or downgrade at any time, and changes take effect on
-                  your next billing cycle.
+                  Absolutely. You can upgrade or downgrade at any time, and changes take
+                  effect on your next billing cycle.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="cancel">
                 <AccordionTrigger>How do I cancel?</AccordionTrigger>
                 <AccordionContent>
-                  You can cancel your subscription from your workspace settings at any time. No
-                  cancellation fees or hidden charges.
+                  You can cancel your subscription from your workspace settings at any time.
+                  No cancellation fees or hidden charges.
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="data">
                 <AccordionTrigger>Where is my data stored?</AccordionTrigger>
                 <AccordionContent>
-                  Your data is stored in secure, SOC 2 compliant data centers with encryption at
-                  rest and in transit.
+                  Your data is stored in secure, SOC 2 compliant data centers with encryption
+                  at rest and in transit.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -540,42 +514,44 @@ function Index() {
         </section>
 
         {/* CTA Banner */}
-        <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8 lg:pb-24">
-          <AnimateOnScroll>
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-8 text-center sm:p-12 lg:p-16">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02]" />
-              <div className="relative">
-                <h2 className="text-3xl font-semibold tracking-tight text-card-foreground sm:text-4xl">
-                  Ready to bring clarity to your work?
-                </h2>
-                <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-                  Join hundreds of teams who have simplified the way they manage projects.
-                </p>
-                <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                  <Button size="lg" className="px-8">
-                    Start your free trial
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                  <Button size="lg" variant="outline" className="px-8">
-                    Talk to sales
-                  </Button>
+        <section className="bg-white">
+          <div className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8 lg:pb-24">
+            <AnimateOnScroll>
+              <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-8 text-left sm:p-12 lg:p-16">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02]" />
+                <div className="relative">
+                  <h2 className="font-heading font-semibold tracking-tight text-card-foreground sm:text-4xl text-3xl">
+                    Ready to bring clarity to your work?
+                  </h2>
+                  <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
+                    Join hundreds of teams who have simplified the way they manage projects.
+                  </p>
+                  <div className="mt-8 flex flex-col items-start justify-start gap-3 sm:flex-row">
+                    <Button size="lg" className="px-8">
+                      Start your free trial
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                    <Button size="lg" variant="outline" className="px-8">
+                      Talk to sales
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </AnimateOnScroll>
+            </AnimateOnScroll>
+          </div>
         </section>
       </main>
 
       <footer className="border-t border-border bg-background">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <a href="/" className="flex items-center gap-2.5 font-semibold text-foreground">
+          <div className="flex flex-col items-start justify-between gap-6 sm:flex-row">
+            <a href="/" className="flex items-center gap-2.5 font-heading font-semibold text-foreground">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Layout className="h-4 w-4" />
               </div>
               Clarity
             </a>
-            <nav className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+            <nav className="flex flex-wrap justify-start gap-6 text-sm text-muted-foreground">
               <a href="#" className="transition-colors hover:text-foreground">
                 Privacy
               </a>
@@ -676,8 +652,12 @@ function PricingCard({
       <CardContent className="flex flex-1 flex-col p-6">
         <h3 className="text-lg font-semibold text-foreground">{name}</h3>
         <div className="mt-4 flex items-baseline">
-          <span className="text-4xl font-semibold tracking-tight text-foreground">{price}</span>
-          {period && <span className="ml-1 text-sm text-muted-foreground">{period}</span>}
+          <span className="text-4xl font-semibold tracking-tight text-foreground">
+            {price}
+          </span>
+          {period && (
+            <span className="ml-1 text-sm text-muted-foreground">{period}</span>
+          )}
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{description}</p>
         <ul className="mt-6 flex-1 space-y-3">
@@ -691,7 +671,6 @@ function PricingCard({
         <Button
           className="mt-8 w-full"
           variant={isHighlight ? "default" : "outline"}
-          size={isHighlight ? "default" : "default"}
         >
           {cta}
           {isHighlight && <ArrowRight className="ml-2 h-4 w-4" />}
