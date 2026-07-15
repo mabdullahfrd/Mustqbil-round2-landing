@@ -234,7 +234,8 @@
     .animate-scale-in,
     .animate-shimmer,
     .animate-blink {
-      animation: none;
+      animation: none !important;
+      opacity: 1 !important;
     }
   }
 }

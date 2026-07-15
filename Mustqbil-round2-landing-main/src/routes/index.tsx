@@ -8,11 +8,6 @@ import {
 } from "@/components/ui/accordion";
 import {
   Check,
-  Layout,
-  Zap,
-  Shield,
-  BarChart3,
-  Users,
   Menu,
   X,
   ArrowRight,
@@ -124,42 +119,59 @@ function useTypewriter(text: string, speed = 38, startDelay = 600) {
 function Index() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
-  const monitorRef = useRef<HTMLDivElement>(null);
-  const [monitorAngle, setMonitorAngle] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const typewriterText =
     "Clarity gives small teams a clean, focused workspace to plan tasks, track progress, and ship work together. No bloat, no steep learning curve.";
   const { displayed, done } = useTypewriter(typewriterText);
 
   useEffect(() => {
+    const video = videoRef.current;
+    let prevX: number | null = null;
+    let targetTime = 0;
+    let seeking = false;
+    const SENSITIVITY = 0.8;
+
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({
-        x: e.clientX / window.innerWidth,
-        y: e.clientY / window.innerHeight,
-      });
-      const monitor = monitorRef.current;
-      if (monitor) {
-        const rect = monitor.getBoundingClientRect();
-        const mx = rect.left + rect.width / 2;
-        const my = rect.top + rect.height / 2;
-        const dx = e.clientX - mx;
-        const dy = e.clientY - my;
-        const deg = Math.atan2(dy, dx) * (180 / Math.PI);
-        setMonitorAngle(deg);
+      if (prevX === null) {
+        prevX = e.clientX;
+        return;
+      }
+      const delta = e.clientX - prevX;
+      prevX = e.clientX;
+      if (!video || !video.duration || !isFinite(video.duration)) return;
+      targetTime = Math.max(
+        0,
+        Math.min(video.duration, targetTime + (delta / window.innerWidth) * SENSITIVITY * video.duration),
+      );
+      if (!seeking) {
+        seeking = true;
+        video.currentTime = targetTime;
       }
     };
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
 
-  const translateX = (mousePos.x - 0.5) * -40;
-  const translateY = (mousePos.y - 0.5) * -40;
+    const handleSeeked = () => {
+      if (!video) return;
+      if (Math.abs(video.currentTime - targetTime) > 0.01) {
+        video.currentTime = targetTime;
+      } else {
+        seeking = false;
+      }
+    };
+
+    if (video) video.addEventListener("seeked", handleSeeked);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (video) video.removeEventListener("seeked", handleSeeked);
+    };
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col bg-background relative overflow-x-hidden">
-      {/* Background Video - man always visible */}
+      {/* Background Video - man always visible, scrubs on horizontal mouse move */}
       <video
+        ref={videoRef}
         className="video-bg"
         src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260530_042513_df96a13b-6155-4f6e-8b93-c9dee66fba08.mp4"
         muted
@@ -167,45 +179,11 @@ function Index() {
         preload="auto"
         aria-hidden="true"
         style={{
-          transform: `scale(1.15) translate(${translateX}px, ${translateY}px)`,
-          transition: "transform 0.15s ease-out",
           objectPosition: "65% center",
         }}
       />
       {/* Left-side gradient overlay for text readability, right side clear for man */}
       <div className="fixed inset-0 z-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
-
-      {/* Cursor-tracking monitor: body static, only head (pointer) rotates */}
-      <div
-        ref={monitorRef}
-        className="fixed z-20 pointer-events-none"
-        style={{ top: "14%", right: "26%" }}
-      >
-        {/* Body: monitor screen (stays still) */}
-        <div className="relative w-20 h-14 rounded-xl border-2 border-primary/70 bg-primary/10 backdrop-blur-md flex items-center justify-center shadow-lg">
-          <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-        </div>
-        {/* Head: rotating pointer/arrow (points at cursor) */}
-        <div
-          className="absolute left-1/2 top-1/2"
-          style={{
-            transform: `translate(-50%, -50%) rotate(${monitorAngle}deg)`,
-            transition: "transform 0.1s ease-out",
-          }}
-        >
-          <div className="relative" style={{ width: "3.5rem", height: "2px" }}>
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-full rounded-full bg-primary" />
-            <div
-              className="absolute right-0 top-1/2 -translate-y-1/2 w-0 h-0"
-              style={{
-                borderLeft: "10px solid var(--color-primary)",
-                borderTop: "6px solid transparent",
-                borderBottom: "6px solid transparent",
-              }}
-            />
-          </div>
-        </div>
-      </div>
 
       <header className="fixed top-0 left-0 right-0 z-30 px-5 sm:px-8 py-4 sm:py-5 glass-dark border-b border-white/10">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
@@ -262,18 +240,25 @@ function Index() {
 
       <main className="flex-1 relative z-10">
         {/* Hero Section - content on left, text-left */}
-        <section className="min-h-screen flex flex-col justify-center px-5 sm:px-8 md:px-10 overflow-hidden">
+        <section className="min-h-screen flex flex-col justify-center px-5 sm:px-8 md:px-10 overflow-x-hidden py-28 md:py-32">
           <div className="max-w-xl relative z-10 w-full text-left">
-            <div className="animate-fade-in pointer-events-none select-none mb-5 sm:mb-6" style={{ fontSize: "clamp(18px, 4vw, 26px)", lineHeight: 1.3, fontWeight: 400, color: "var(--color-primary-foreground)", filter: "blur(4px)" }}>
+            <div className="pointer-events-none select-none mb-5 sm:mb-6" style={{ fontSize: "clamp(18px, 4vw, 26px)", lineHeight: 1.3, fontWeight: 400, color: "var(--color-primary-foreground)", filter: "blur(4px)" }}>
               <span className="block">Hey there, meet Clarity,</span>
               <span className="block">Simple project management for focused teams</span>
             </div>
 
-            <h1 className="animate-fade-in-up font-heading font-semibold tracking-tight text-primary-foreground mb-6 text-left" style={{ fontSize: "clamp(32px, 6vw, 60px)", lineHeight: 1.05 }}>
+            <h1 className="font-heading font-semibold tracking-tight text-primary-foreground mb-6 text-left" style={{ fontSize: "clamp(32px, 6vw, 60px)", lineHeight: 1.05 }}>
               Project management <span className="gradient-text">without the noise</span>
             </h1>
 
-            <p className="animate-fade-in-up-delay-1 mb-6 text-left text-primary-foreground/80" style={{ fontSize: "clamp(18px, 4vw, 26px)", lineHeight: 1.4, fontWeight: 400, minHeight: "3.6em" }}>
+            <p className="mb-6 text-left text-primary-foreground/80" style={{ fontSize: "clamp(16px, 3vw, 20px)", fontWeight: 500 }}>
+              Reach out at{" "}
+              <a href="mailto:hello@clarity.ai" className="text-primary underline underline-offset-2 hover:opacity-80 transition-opacity">
+                clarity.ai
+              </a>
+            </p>
+
+            <p className="mb-6 text-left text-primary-foreground/80" style={{ fontSize: "clamp(18px, 4vw, 26px)", lineHeight: 1.4, fontWeight: 400, minHeight: "3.6em" }}>
               {displayed}
               {!done && (
                 <span className="inline-block w-[2px] h-[1.1em] bg-primary align-middle ml-[2px] animate-blink" aria-hidden="true" />
@@ -296,15 +281,35 @@ function Index() {
               <Button
                 variant="outline"
                 className="inline-flex items-center justify-center gap-2 sm:gap-3 bg-transparent text-primary-foreground border-primary rounded-full text-[13px] sm:text-[15px] px-4 sm:px-5 py-[0.3em] mx-[0.2em] mb-[0.4em] whitespace-nowrap hover:bg-primary hover:text-primary-foreground transition-colors duration-200"
-                onClick={() => navigator.clipboard.writeText("hello@clarity.inc")}
+                onClick={() => navigator.clipboard.writeText("hello@clarity.ai")}
               >
-                <span className="underline underline-offset-1">Reach us: hello@clarity.inc</span>
+                <span className="underline underline-offset-1">Reach us: hello@clarity.ai</span>
                 <Copy className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
               </Button>
             </div>
-            <p className="animate-fade-in-up-delay-2 mt-4 text-sm text-primary-foreground/60 text-left">
+            <p className="mt-4 text-sm text-primary-foreground/60 text-left">
               Free 14-day trial. No credit card required.
             </p>
+          </div>
+        </section>
+
+        {/* Stats / Trust strip */}
+        <section className="relative py-10 sm:py-12">
+          <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+            <AnimateOnScroll>
+              <div className="glass-card flex flex-col items-center justify-center gap-8 rounded-2xl px-6 py-8 text-center sm:flex-row sm:gap-0 sm:divide-x sm:divide-white/15">
+                {[
+                  { value: "12,000+", label: "Focused teams" },
+                  { value: "99.9%", label: "Uptime" },
+                  { value: "SOC 2", label: "Compliant" },
+                ].map((stat) => (
+                  <div key={stat.label} className="flex flex-col items-center px-6 sm:flex-1">
+                    <span className="font-heading text-2xl font-semibold text-primary sm:text-3xl">{stat.value}</span>
+                    <span className="mt-1 text-sm text-primary-foreground/70">{stat.label}</span>
+                  </div>
+                ))}
+              </div>
+            </AnimateOnScroll>
           </div>
         </section>
 
@@ -320,17 +325,16 @@ function Index() {
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl text-left">
               {[
-                { icon: <Layout className="h-5 w-5" />, title: "Simple task boards", description: "Organize work with drag-and-drop boards that stay out of your way." },
-                { icon: <Zap className="h-5 w-5" />, title: "Fast prioritization", description: "Focus on what matters today with clear priorities and due dates." },
-                { icon: <Users className="h-5 w-5" />, title: "Team collaboration", description: "Comment, assign, and mention teammates to keep everyone aligned." },
-                { icon: <BarChart3 className="h-5 w-5" />, title: "Clear progress", description: "See project health at a glance with lightweight progress tracking." },
-                { icon: <Shield className="h-5 w-5" />, title: "Private by default", description: "Your data is encrypted and only visible to people you invite." },
-                { icon: <Check className="h-5 w-5" />, title: "Zero setup", description: "Create a project in seconds and invite your team with one link." },
+                { title: "Simple task boards", description: "Organize work with drag-and-drop boards that stay out of your way." },
+                { title: "Fast prioritization", description: "Focus on what matters today with clear priorities and due dates." },
+                { title: "Team collaboration", description: "Comment, assign, and mention teammates to keep everyone aligned." },
+                { title: "Clear progress", description: "See project health at a glance with lightweight progress tracking." },
+                { title: "Private by default", description: "Your data is encrypted and only visible to people you invite." },
+                { title: "Zero setup", description: "Create a project in seconds and invite your team with one link." },
               ].map((feature, i) => (
                 <AnimateOnScroll key={feature.title} delay={i * 0.1}>
                   <div className="glass-card h-full rounded-xl p-6 transition-all duration-200 hover:bg-white/15">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20 text-primary">{feature.icon}</div>
-                    <h3 className="mt-4 text-lg font-semibold text-primary-foreground">{feature.title}</h3>
+                    <h3 className="text-lg font-semibold text-primary-foreground">{feature.title}</h3>
                     <p className="mt-2 text-primary-foreground/70">{feature.description}</p>
                   </div>
                 </AnimateOnScroll>
@@ -415,7 +419,7 @@ function Index() {
                       <li key={f} className="flex items-start gap-3 text-sm text-primary-foreground"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{f}</li>
                     ))}
                   </ul>
-                  <Button variant="outline" className="mt-8 w-full border-primary/40 text-primary-foreground hover:bg-primary hover:text-primary-foreground">Get started free</Button>
+                  <Button variant="outline" className="mt-8 w-full border-primary/40 bg-primary/20 text-primary-foreground hover:bg-primary hover:text-primary-foreground">Get started free</Button>
                 </div>
               </AnimateOnScroll>
               <AnimateOnScroll delay={0.1}>
@@ -448,7 +452,7 @@ function Index() {
                       <li key={f} className="flex items-start gap-3 text-sm text-primary-foreground"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{f}</li>
                     ))}
                   </ul>
-                  <Button variant="outline" className="mt-8 w-full border-primary/40 text-primary-foreground hover:bg-primary hover:text-primary-foreground">Contact sales</Button>
+                  <Button variant="outline" className="mt-8 w-full border-primary/40 bg-primary/20 text-primary-foreground hover:bg-primary hover:text-primary-foreground">Contact sales</Button>
                 </div>
               </AnimateOnScroll>
             </div>
@@ -493,7 +497,7 @@ function Index() {
                 <p className="mt-4 max-w-xl text-lg text-primary-foreground/70">Join hundreds of teams who have simplified the way they manage projects.</p>
                 <div className="mt-8 flex flex-col items-start justify-start gap-3 sm:flex-row">
                   <Button size="lg" className="px-8 bg-primary text-primary-foreground hover:bg-primary/80">Start your free trial<ArrowRight className="ml-2 h-4 w-4" /></Button>
-                  <Button size="lg" variant="outline" className="px-8 border-primary/40 text-primary-foreground hover:bg-primary hover:text-primary-foreground">Talk to sales</Button>
+                  <Button size="lg" variant="outline" className="px-8 border-primary/40 bg-primary/20 text-primary-foreground hover:bg-primary hover:text-primary-foreground">Talk to sales</Button>
                 </div>
               </div>
             </AnimateOnScroll>
@@ -505,7 +509,9 @@ function Index() {
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row">
             <a href="/" className="flex items-center gap-2.5 font-heading font-semibold text-primary-foreground">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary"><Layout className="h-4 w-4" /></div>
+              <span className="text-[22px] sm:text-[26px] select-none text-primary" style={{ letterSpacing: "-0.02em" }}>
+                ✳︎
+              </span>
               Clarity
             </a>
             <nav className="flex flex-wrap justify-start gap-6 text-sm text-primary-foreground/70">
